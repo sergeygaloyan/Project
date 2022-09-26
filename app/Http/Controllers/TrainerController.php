@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\TrainerRequest;
 use App\Models\Trainer;
+use App\Models\Trainer_field;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -16,7 +17,7 @@ class TrainerController extends Controller
      */
     public function index()
     {
-        $trainers = Trainer::all();
+        $trainers = Trainer_field::all();
         return response()->json(['trainers' => $trainers]);
     }
 
@@ -38,7 +39,7 @@ class TrainerController extends Controller
      */
     public function store(TrainerRequest $request)
     {
-        $trainer = new Trainer();
+        $trainer = new Trainer_field();
         $trainer->name = $request->input('name');
         $trainer->email = $request->input('email');
         $trainer->role_id = $request->input('role_id');
@@ -56,16 +57,12 @@ class TrainerController extends Controller
      */
     public function show($id)
     {
-        $trainer = Trainer::find($id);
-        $today = Carbon::parse()->toDayDateTimeString();
-        $created_day = Carbon::parse($trainer->created_at);
-        $time = $today - $created_day;
+        $trainer = Trainer_field::find($id);
         return response()->json([
             'name' => $trainer->name,
             'email' => $trainer->email,
             'phone' => $trainer->phone,
-            'role' => $trainer->role_id,
-            'time' => $time
+            'role' => $trainer->role_id
         ]);
     }
 
@@ -75,7 +72,7 @@ class TrainerController extends Controller
      * @param  \App\Models\Trainer  $trainer
      * @return \Illuminate\Http\Response
      */
-    public function edit(Trainer $trainer)
+    public function edit(Trainer_field $trainer)
     {
         //
     }
@@ -89,7 +86,7 @@ class TrainerController extends Controller
      */
     public function update(TrainerRequest $request, $id)
     {
-        $teacher = Trainer::find($id);
+        $teacher = Trainer_field::find($id);
         $teacher->name = $request->input('name');
         $teacher->email = $request->input('email');
         $teacher->role_id = $request->input('role');
@@ -108,7 +105,7 @@ class TrainerController extends Controller
      */
     public function destroy($id)
     {
-        Trainer::find($id)->delete();
+        Trainer_field::find($id)->delete();
         return response()->json('Deleted');
     }
 }
