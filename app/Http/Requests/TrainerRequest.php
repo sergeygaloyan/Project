@@ -13,17 +13,17 @@ class TrainerRequest extends FormRequest
      */
     public function authorize()
     {
-        return false;
+        return true;
     }
 
     public function messages()
     {
         return [
-            "name.required" => 'Please enter your name!',
+            "name.required" => 'Please enter your  name!',
             "email.required" => 'Please enter your email!',
             "password.required" => 'Please enter your password!',
-            "role_id.required" => 'Please enter your Role!',
-            "phone.required" => 'Please enter your Phone!',
+            "role_id.required" => 'Please enter your role!',
+            "phone.required" => 'Please enter your Phone!'
         ];
     }
 
@@ -31,10 +31,10 @@ class TrainerRequest extends FormRequest
     {
         return [
             'name' => 'required',
-            'email' => 'required|email|unique',
             'role_id' => 'required',
+            'email' => 'required|email',
             'password' => 'required',
-            'phone' => 'required',
+            'phone' => 'required'
 
         ];
 

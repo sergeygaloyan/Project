@@ -5,107 +5,268 @@ namespace App\Http\Controllers;
 use App\Http\Requests\TrainerRequest;
 use App\Models\Trainer;
 use App\Models\Trainer_field;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 
 class TrainerController extends Controller
 {
+
     /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
+     * @OA\Get(
+     *      path="/api/trainers",
+     *      tags={"Trainers"},
+     *      summary="Get list of trainers",
+     *      description="Returns list of trainers",
+     *      security={ {"sanctum": {} }},
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *          @OA\JsonContent(@OA\Schema(
+     *              type="object",
+     *              example={"email": "ex@gmail.com", "firstName": "Name"}
+     *          ))
+     *       ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden"
+     *      ),
+     *     @OA\Response(
+     *          response=400,
+     *          description="Trainer not found."
+     *      )
+     * )
      */
     public function index()
     {
-        $trainers = Trainer_field::all();
+        $trainers = User::all()->where('role_id', "2");
         return response()->json(['trainers' => $trainers]);
     }
 
     /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @OA\Post(
+     *      path="/api/trainers",
+     *      operationId="storeTrainers",
+     *      tags={"Trainers"},
+     *      summary="Store new trainer",
+     *      description="Returns trainer data",
+     *      @OA\RequestBody(
+     *         @OA\JsonContent(),
+     *         @OA\MediaType(
+     *            mediaType="multipart/form-data",
+     *            @OA\Schema(
+     *               type="object",
+     *               required={"name","role_id","email","password", "phone"},
+     *               @OA\Property(property="name", type="text"),
+     *               @OA\Property(property="email", type="email"),
+     *               @OA\Property(property="role_id", type="integer"),
+     *               @OA\Property(property="password", type="password"),
+     *               @OA\Property(property="phone", type="number"),
+     *            ),
+     *        ),
+     *    ),
+     *      @OA\Response(
+     *          response=201,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden"
+     *      )
+     * )
      */
     public function store(TrainerRequest $request)
     {
-        $trainer = new Trainer_field();
-        $trainer->name = $request->input('name');
-        $trainer->email = $request->input('email');
-        $trainer->role_id = $request->input('role_id');
-        $trainer->password = $request->input('password');
-        $trainer->phone = $request->input('phone');
-        $trainer->save();
-        return response()->json(['trainer' => $trainer]);
+        if ($request->role_id == "2") {
+            $trainer = new User();
+            $trainer->name = $request->name;
+            $trainer->email = $request->email;
+            $trainer->role_id = $request->role_id;
+            $trainer->password = Hash::make($request->password);
+            $trainer->phone = $request->phone;
+            $trainer->save();
+            return response()->json([
+                'status' => true,
+                'message' => 'User Created Successfully'
+            ], 201);
+        } else {
+            return response()->json([
+                'status' => false,
+                'message' => 'User is been trainer only'
+            ]);
+        }
     }
-
     /**
-     * Display the specified resource.
-     *
-     * @param  \App\Models\Trainer  $trainer
-     * @return \Illuminate\Http\Response
+     * @OA\Get(
+     *      path="/api/trainers/{id}",
+     *      operationId="getTrainer",
+     *      tags={"Trainers"},
+     *      summary="Get trainer information",
+     *      description="Returns trainer data",
+     *      @OA\Parameter(
+     *          name="id",
+     *          description="Trainer id",
+     *          required=true,
+     *          in="path",
+     *          @OA\Schema(
+     *              type="integer"
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden"
+     *      )
+     * )
      */
     public function show($id)
     {
-        $trainer = Trainer_field::find($id);
-        return response()->json([
-            'name' => $trainer->name,
-            'email' => $trainer->email,
-            'phone' => $trainer->phone,
-            'role' => $trainer->role_id
-        ]);
+        $trainer = User::find($id);
+        if($trainer->role_id == 2){
+            return response()->json([
+                'status' => true,
+                'trainer' => $trainer
+            ]);
+        }
+        else
+        {
+            return response()->json([
+                'status' => false,
+                'message' => 'User is been trainer only'
+            ]);
+        }
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\Trainer  $trainer
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(Trainer_field $trainer)
-    {
-        //
-    }
 
     /**
-     * Update the specified resource in storage.
+     * @OA\Put(
+     *      path="/api/trainers/{id}",
+     *      operationId="updateTrainer",
+     *      tags={"Trainers"},
+     *      summary="Update existing Trainer",
+     *      description="Returns updated project data",
+     *      @OA\Parameter(
+     *          name="id",
+     *          description="Trainer id",
+     *          required=true,
+     *          in="path",
+     *          @OA\Schema(
+     *              type="integer"
+     *          )
+     *      ),
+     *      @OA\RequestBody(
+     *          required=true,
+     *      ),
+     *      @OA\Response(
+     *          response=202,
+     *          description="Successful operation",
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Trainer  $trainer
-     * @return \Illuminate\Http\Response
+     *       ),
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden"
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Resource Not Found"
+     *      )
+     * )
      */
     public function update(TrainerRequest $request, $id)
     {
-        $teacher = Trainer_field::find($id);
-        $teacher->name = $request->input('name');
-        $teacher->email = $request->input('email');
-        $teacher->role_id = $request->input('role');
-        $teacher->password = $request->input('password');
-        $teacher->phone = $request->input('phone');
-        $teacher->save();
-        return response()->json(['teacher' => $teacher]);
+        $trainer = User::find($id);
+        if ($trainer->role_id == 2) {
+            $trainer->name = $request->name;
+            $trainer->email = $request->email;
+            $trainer->role_id = $request->role_id;
+            $trainer->password = $request->password;
+            $trainer->phone = $request->phone;
+            $trainer->save();
+            var_dump($trainer);
+//            return response()->json(
+//                ['status' => true,
+//                    'trainer' => $trainer]);
+//        }
+//        else
+//        {
+//            return response()->json([
+//                'status' => false,
+//                'message' => 'User is been trainer only'
+//            ]);
+        }
 
-    }
+        }
 
     /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Models\Trainer  $trainer
-     * @return \Illuminate\Http\Response
+     * @OA\Delete(
+     *      path="/api/trainer/{id}",
+     *      operationId="deleteTrainer",
+     *      tags={"Trainers"},
+     *      summary="Delete existing trainer",
+     *      description="Deletes a record and returns no content",
+     *      @OA\Parameter(
+     *          name="id",
+     *          description="Trainer id",
+     *          required=true,
+     *          in="path",
+     *          @OA\Schema(
+     *              type="integer"
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=204,
+     *          description="Successful operation",
+     *          @OA\JsonContent()
+     *       ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden"
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Resource Not Found"
+     *      )
+     * )
      */
     public function destroy($id)
     {
-        Trainer_field::find($id)->delete();
+        User::find($id)->delete();
         return response()->json('Deleted');
     }
 }
