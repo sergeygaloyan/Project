@@ -55,6 +55,7 @@ class TrainerController extends Controller
      *      tags={"Trainers"},
      *      summary="Store new trainer",
      *      description="Returns trainer data",
+     *      security={ {"sanctum": {} }},
      *      @OA\RequestBody(
      *         @OA\JsonContent(),
      *         @OA\MediaType(
@@ -116,6 +117,7 @@ class TrainerController extends Controller
      *      tags={"Trainers"},
      *      summary="Get trainer information",
      *      description="Returns trainer data",
+     *      security={ {"sanctum": {} }},
      *      @OA\Parameter(
      *          name="id",
      *          description="Trainer id",
@@ -165,10 +167,11 @@ class TrainerController extends Controller
     /**
      * @OA\Put(
      *      path="/api/trainers/{id}",
-     *      operationId="updateTrainer",
      *      tags={"Trainers"},
-     *      summary="Update existing Trainer",
-     *      description="Returns updated project data",
+     *      summary="Update existing trainer",
+     *      description="Returns updated trainer data",
+     *      security={ {"sanctum": {} }},
+     *
      *      @OA\Parameter(
      *          name="id",
      *          description="Trainer id",
@@ -178,17 +181,31 @@ class TrainerController extends Controller
      *              type="integer"
      *          )
      *      ),
-     *      @OA\RequestBody(
-     *          required=true,
-     *      ),
+     *
+     *     @OA\RequestBody(
+     *    required=true,
+     *    description="Pass user registration credentials",
+     *    @OA\JsonContent(
+     *       required={"name","email","password","phone","role_id"},
+     *       @OA\Property(property="name", type="string", example="Anna"),
+     *       @OA\Property(property="email", type="string", example="user1@mail.com"),
+     *       @OA\Property(property="password", type="string", example="FFff22"),
+     *       @OA\Property(property="phone", type="string", example="094415263"),
+     *       @OA\Property(property="role_id", type="integer", example=1),
+     *    ),
+     * ),
+     *
      *      @OA\Response(
      *          response=202,
      *          description="Successful operation",
-     *
+     *           @OA\MediaType(
+     *              mediaType="application/json",
+     *          )
      *       ),
+     *
      *      @OA\Response(
-     *          response=400,
-     *          description="Bad Request"
+     *          response=422,
+     *          description="Unprocessable Content"
      *      ),
      *      @OA\Response(
      *          response=401,
@@ -204,31 +221,30 @@ class TrainerController extends Controller
      *      )
      * )
      */
-    public function update(TrainerRequest $request, $id)
+    public function update(Request $request, $id)
     {
         $trainer = User::find($id);
-        if ($trainer->role_id == 2) {
+        if($trainer->role_id == 2)
+        {
             $trainer->name = $request->name;
             $trainer->email = $request->email;
             $trainer->role_id = $request->role_id;
             $trainer->password = $request->password;
             $trainer->phone = $request->phone;
             $trainer->save();
-            var_dump($trainer);
-//            return response()->json(
-//                ['status' => true,
-//                    'trainer' => $trainer]);
-//        }
-//        else
-//        {
-//            return response()->json([
-//                'status' => false,
-//                'message' => 'User is been trainer only'
-//            ]);
+            return response()->json(
+                ['status' => true,
+                    'trainer' => $trainer]);
+        }
+        else
+        {
+            return response()->json([
+                'status' => false,
+                'message' => 'User is been trainer only'
+            ]);
         }
 
-        }
-
+    }
     /**
      * @OA\Delete(
      *      path="/api/trainer/{id}",
@@ -236,6 +252,7 @@ class TrainerController extends Controller
      *      tags={"Trainers"},
      *      summary="Delete existing trainer",
      *      description="Deletes a record and returns no content",
+     *      security={ {"sanctum": {} }},
      *      @OA\Parameter(
      *          name="id",
      *          description="Trainer id",
